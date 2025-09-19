@@ -1,0 +1,5 @@
+package taskapp.config;
+
+public class DataInitializer {
+
+}

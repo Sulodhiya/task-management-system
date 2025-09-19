@@ -1,0 +1,5 @@
+package taskapp.repository;
+
+public interface TaskRepository {
+
+}

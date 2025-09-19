@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="jakarta.persistence.Entity"/>
+    <fullyQualifiedTypeName name="lombok.NoArgsConstructor"/>
+    <fullyQualifiedTypeName name="lombok.AllArgsConstructor"/>
+    <fullyQualifiedTypeName name="jakarta.persistence.GeneratedValue"/>
+    <fullyQualifiedTypeName name="jakarta.persistence.GenerationType"/>
+    <fullyQualifiedTypeName name="java.time.LocalDateTime"/>
+    <fullyQualifiedTypeName name="org.springframework.context.annotation.Role"/>
+    <fullyQualifiedTypeName name="jakarta.persistence.Table"/>
+    <fullyQualifiedTypeName name="jakarta.persistence.Id"/>
+    <fullyQualifiedTypeName name="jakarta.annotation.Priority"/>
+    <fullyQualifiedTypeName name="taskapp.entity.Priority"/>
+    <fullyQualifiedTypeName name="taskapp.entity.Status"/>
+    <fullyQualifiedTypeName name="java.util.List"/>
+    <fullyQualifiedTypeName name="java.util.Optional"/>
+    <fullyQualifiedTypeName name="io.jsonwebtoken.security.SignatureAlgorithm"/>
+    <fullyQualifiedTypeName name="taskapp.entity.Role"/>
+    <fullyQualifiedTypeName name="java.util.Set"/>
+    <fullyQualifiedTypeName name="taskapp.entity.User"/>
+    <fullyQualifiedTypeName name="io.jsonwebtoken.SignatureAlgorithm"/>
+    <fullyQualifiedTypeName name="java.util.Date"/>
+    <fullyQualifiedTypeName name="lombok.Data"/>
+</qualifiedTypeNameHistroy>

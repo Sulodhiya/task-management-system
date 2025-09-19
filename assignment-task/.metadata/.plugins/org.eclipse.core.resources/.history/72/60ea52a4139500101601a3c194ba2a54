@@ -1,0 +1,113 @@
+package taskapp.service;
+
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import taskapp.entity.*;
+import taskapp.repository.*;
+
+import java.time.Instant;
+import java.util.List;
+
+@Service
+public class TaskService {
+    private final TaskRepository taskRepository;
+    private final StatusRepository statusRepository;
+    private final PriorityRepository priorityRepository;
+    private final UserRepository userRepository;
+
+    public TaskService(TaskRepository taskRepository,
+                       StatusRepository statusRepository,
+                       PriorityRepository priorityRepository,
+                       UserRepository userRepository) {
+        this.taskRepository = taskRepository;
+        this.statusRepository = statusRepository;
+        this.priorityRepository = priorityRepository;
+        this.userRepository = userRepository;
+    }
+
+    public List<Task> getTasks(Long statusId, Long assigneeId) {
+        if (statusId != null && assigneeId != null) {
+            return taskRepository.findByStatusIdAndAssigneeId(statusId, assigneeId);
+        } else if (statusId != null) {
+            return taskRepository.findByStatusId(statusId);
+        } else if (assigneeId != null) {
+            return taskRepository.findByAssigneeId(assigneeId);
+        } else {
+            return taskRepository.findAll();
+        }
+    }
+
+    @Transactional
+    public Task createTask(Task t, Long creatorId) {
+        if (t.getStatus() != null && t.getStatus().getId() != null) {
+            Status st = statusRepository.findById(t.getStatus().getId()).orElseThrow(() -> new RuntimeException("Status not found"));
+            t.setStatus(st);
+        }
+        if (t.getPriority() != null && t.getPriority().getId() != null) {
+            Priority p = priorityRepository.findById(t.getPriority().getId()).orElseThrow(() -> new RuntimeException("Priority not found"));
+            t.setPriority(p);
+        }
+        if (t.getAssignee() != null && t.getAssignee().getId() != null) {
+            User a = userRepository.findById(t.getAssignee().getId()).orElseThrow(() -> new RuntimeException("Assignee not found"));
+            t.setAssignee(a);
+        }
+        User creator = userRepository.findById(creatorId).orElseThrow(() -> new RuntimeException("Creator not found"));
+        t.setCreator(creator);
+        t.setCreatedAt(Instant.now());
+        t.setUpdatedAt(Instant.now());
+        return taskRepository.save(t);
+    }
+
+    @Transactional
+    public Task updateTask(Long id, Task updated) {
+        Task existing = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        if (updated.getTitle() != null) existing.setTitle(updated.getTitle());
+        existing.setDescription(updated.getDescription());
+        if (updated.getStatus() != null && updated.getStatus().getId() != null) {
+            Status st = statusRepository.findById(updated.getStatus().getId()).orElseThrow(() -> new RuntimeException("Status not found"));
+            existing.setStatus(st);
+        }
+        if (updated.getPriority() != null && updated.getPriority().getId() != null) {
+            Priority p = priorityRepository.findById(updated.getPriority().getId()).orElseThrow(() -> new RuntimeException("Priority not found"));
+            existing.setPriority(p);
+        }
+        if (updated.getAssignee() != null && updated.getAssignee().getId() != null) {
+            User a = userRepository.findById(updated.getAssignee().getId()).orElseThrow(() -> new RuntimeException("Assignee not found"));
+            existing.setAssignee(a);
+        }
+        existing.setUpdatedAt(Instant.now());
+        return taskRepository.save(existing);
+    }
+
+    public void deleteTask(Long id) {
+        taskRepository.deleteById(id);
+    }
+
+    // helper to change task status following allowed transitions
+    public Task transitionStatus(Long id, Long newStatusId) {
+        Task t = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        Status newStatus = statusRepository.findById(newStatusId).orElseThrow(() -> new RuntimeException("Status not found"));
+
+        String from = t.getStatus() != null ? t.getStatus().getName() : null;
+        String to = newStatus.getName();
+
+        // Business rule: ToDo -> In_Progress -> Done
+        if (from == null) {
+            // allow setting initial
+            t.setStatus(newStatus);
+        } else {
+            if (from.equals("ToDo") && to.equals("In_Progress")) {
+                t.setStatus(newStatus);
+            } else if (from.equals("In_Progress") && to.equals("Done")) {
+                t.setStatus(newStatus);
+            } else if (from.equals(to)) {
+                // no change
+            } else {
+                throw new RuntimeException("Invalid status transition from " + from + " to " + to);
+            }
+        }
+        t.setUpdatedAt(Instant.now());
+        return taskRepository.save(t);
+    }
+}

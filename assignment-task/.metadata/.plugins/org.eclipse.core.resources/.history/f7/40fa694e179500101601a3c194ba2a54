@@ -1,0 +1,139 @@
+package task.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import task.dto.TaskDTO;
+import task.dto.TaskRequest;
+import task.dto.UserDTO;
+import task.dto.PriorityDTO;
+import task.dto.StatusDTO;
+import task.entity.*;
+import task.service.TaskService;
+import task.service.UserService;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/tasks")
+public class TaskController {
+    private final TaskService taskService;
+    private final UserService userService;
+
+    public TaskController(TaskService taskService, UserService userService) {
+        this.taskService = taskService;
+        this.userService = userService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<TaskDTO>> getTasks(@RequestParam(required = false) Long status,
+                                                  @RequestParam(required = false) Long assignee) {
+        List<Task> list = taskService.getTasks(status, assignee);
+        List<TaskDTO> dtoList = list.stream().map(this::toDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(dtoList);
+    }
+
+    @PostMapping
+    public ResponseEntity<TaskDTO> create(@RequestBody TaskRequest request, Authentication authentication) {
+        // find creator id from authentication
+        Long creatorId = null;
+        if (authentication != null) {
+            String email = authentication.getName();
+            User u = userService.findById(userService.getAllUsers().stream()
+                    .filter(x -> x.getEmail().equals(email))
+                    .findFirst()
+                    .map(User::getId)
+                    .orElseThrow(() -> new RuntimeException("Authenticated user not found"))
+            ).orElseThrow();
+            creatorId = u.getId();
+        } else {
+            throw new RuntimeException("Authentication required");
+        }
+
+        Task t = new Task();
+        t.setTitle(request.getTitle());
+        t.setDescription(request.getDescription());
+
+        if (request.getStatusId() != null) {
+            Status s = new Status();
+            s.setId(request.getStatusId());
+            t.setStatus(s);
+        }
+        if (request.getPriorityId() != null) {
+            Priority p = new Priority();
+            p.setId(request.getPriorityId());
+            t.setPriority(p);
+        }
+        if (request.getAssigneeId() != null) {
+            User a = new User();
+            a.setId(request.getAssigneeId());
+            t.setAssignee(a);
+        }
+
+        Task created = taskService.createTask(t, creatorId);
+        return ResponseEntity.ok(toDTO(created));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TaskDTO> update(@PathVariable Long id, @RequestBody TaskRequest request) {
+        Task t = new Task();
+        t.setTitle(request.getTitle());
+        t.setDescription(request.getDescription());
+        if (request.getStatusId() != null) {
+            Status s = new Status();
+            s.setId(request.getStatusId());
+            t.setStatus(s);
+        }
+        if (request.getPriorityId() != null) {
+            Priority p = new Priority();
+            p.setId(request.getPriorityId());
+            t.setPriority(p);
+        }
+        if (request.getAssigneeId() != null) {
+            User a = new User();
+            a.setId(request.getAssigneeId());
+            t.setAssignee(a);
+        }
+        Task updated = taskService.updateTask(id, t);
+        return ResponseEntity.ok(toDTO(updated));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/transition/{statusId}")
+    public ResponseEntity<TaskDTO> transition(@PathVariable Long id, @PathVariable Long statusId) {
+        Task t = taskService.transitionStatus(id, statusId);
+        return ResponseEntity.ok(toDTO(t));
+    }
+
+    private TaskDTO toDTO(Task t) {
+        TaskDTO dto = new TaskDTO();
+        dto.setId(t.getId());
+        dto.setTitle(t.getTitle());
+        dto.setDescription(t.getDescription());
+
+        if (t.getStatus() != null) {
+            dto.setStatus(new StatusDTO(t.getStatus().getId(), t.getStatus().getName()));
+        }
+        if (t.getPriority() != null) {
+            dto.setPriority(new PriorityDTO(t.getPriority().getId(), t.getPriority().getName()));
+        }
+        if (t.getAssignee() != null) {
+            dto.setAssignee(new UserDTO(t.getAssignee().getId(), t.getAssignee().getName(), t.getAssignee().getEmail()));
+        }
+        if (t.getCreator() != null) {
+            dto.setCreator(new UserDTO(t.getCreator().getId(), t.getCreator().getName(), t.getCreator().getEmail()));
+        }
+
+        // ✅ LocalDateTime assign directly
+        dto.setCreatedAt(t.getCreatedAt());
+        dto.setUpdatedAt(t.getUpdatedAt());
+
+        return dto;
+    }
+}

@@ -1,0 +1,17 @@
+package taskapp.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import taskapp.entity.Status;
+import taskapp.entity.Task;
+import taskapp.entity.User;
+
+public interface TaskRepository extends JpaRepository<Task, Long> {
+	
+	List<Task> findByStatus(Status status);
+    List<Task> findByAssignee(User assignee);
+    List<Task> findByStatusAndAssignee(Status status, User assignee);
+
+}

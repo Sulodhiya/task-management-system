@@ -1,0 +1,47 @@
+package taskapp.dto;
+
+
+
+import java.time.Instant;
+
+public class TaskDTO {
+    private Long id;
+    private String title;
+    private String description;
+    private StatusDTO status;
+    private PriorityDTO priority;
+    private UserDTO assignee;
+    private UserDTO creator;
+    private Instant createdAt;
+    private Instant updatedAt;
+
+    public TaskDTO() {}
+
+    // getters & setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public StatusDTO getStatus() { return status; }
+    public void setStatus(StatusDTO status) { this.status = status; }
+
+    public PriorityDTO getPriority() { return priority; }
+    public void setPriority(PriorityDTO priority) { this.priority = priority; }
+
+    public UserDTO getAssignee() { return assignee; }
+    public void setAssignee(UserDTO assignee) { this.assignee = assignee; }
+
+    public UserDTO getCreator() { return creator; }
+    public void setCreator(UserDTO creator) { this.creator = creator; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+}

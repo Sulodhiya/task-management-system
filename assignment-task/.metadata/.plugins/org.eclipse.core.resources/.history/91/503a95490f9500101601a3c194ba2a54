@@ -1,0 +1,5 @@
+package taskapp.dto;
+
+public class TaskDTO {
+
+}

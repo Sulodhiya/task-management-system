@@ -1,0 +1,51 @@
+package taskapp.security;
+
+import java.io.IOException;
+
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import taskapp.service.CustomUserDetailsService;
+
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService userDetailsService;
+
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
+        this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
+        String path = request.getRequestURI();
+
+        // ✅ Skip JWT validation for auth endpoints (register/login)
+        if (path.startsWith("/api/auth")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            String jwt = getJwtFromRequest(request);
+
+            if (jwt != null && jwtUtil.validateToken(jwt)) {
+                String username = jwtUtil.getUsernameFromJWT(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSou

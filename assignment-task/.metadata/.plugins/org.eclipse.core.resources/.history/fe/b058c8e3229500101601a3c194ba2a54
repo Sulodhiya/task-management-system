@@ -1,0 +1,67 @@
+package taskapp.security;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.security.Key;
+import java.util.Date;
+
+@Component
+public class JwtUtil {
+
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;  // Must be at least 32 chars
+
+    @Value("${app.jwt.expiration-ms}")
+    private long jwtExpirationInMs;
+
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
+
+    // ✅ Generate JWT token
+    public String generateToken(String username, Long userId) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
+
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("userId", userId)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // Must specify algorithm
+                .compact();
+    }
+
+    // ✅ Extract username
+    public String getUsernameFromJWT(String token) {
+        try {
+            Claims claims = ((Object) Jwts.builder())
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.getSubject();
+        } catch (JwtException ex) {
+            return null; // Invalid JWT
+        }
+    }
+
+    // ✅ Validate token
+    public boolean validateToken(String token) {
+        try {
+            Jwts.builder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (ExpiredJwtException ex) {
+            throw ex; // handle token expiration
+        } catch (JwtException | IllegalArgumentException ex) {
+            return false; // invalid token
+        }
+    }
+}

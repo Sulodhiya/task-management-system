@@ -1,0 +1,5 @@
+package taskapp.entity;
+
+public class Task {
+
+}

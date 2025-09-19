@@ -1,0 +1,5 @@
+package taskapp.service;
+
+public class UserService {
+
+}

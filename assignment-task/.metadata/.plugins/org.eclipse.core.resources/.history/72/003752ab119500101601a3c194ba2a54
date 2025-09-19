@@ -1,0 +1,60 @@
+package taskapp.service;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import taskapp.entity.Role;
+import taskapp.entity.User;
+import taskapp.repository.RoleRepository;
+import taskapp.repository.UserRepository;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+
+    // ✅ Register a new user
+    public String register(String name, String email, String password) {
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email already in use!");
+        }
+
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password)); // hash password
+
+        // default role = USER
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("USER role not found!"));
+
+        Set<Role> roles = new HashSet<>();
+        roles.add(userRole);
+        user.setRoles(roles);
+
+        userRepository.save(user);
+
+        return "User registered successfully!";
+    }
+
+    // ✅ Login and generate JWT token
+    public String login(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid credentials!");
+        }
+
+        // Generate JWT
+        return jwtService.generateToken(user);
+    }
+}

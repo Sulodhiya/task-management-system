@@ -1,0 +1,5 @@
+package taskapp.exceptions;
+
+public class GlobalExceptionHandler {
+
+}

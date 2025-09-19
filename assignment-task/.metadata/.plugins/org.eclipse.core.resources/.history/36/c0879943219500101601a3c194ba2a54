@@ -1,0 +1,68 @@
+package taskapp.config;
+
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import taskapp.entity.*;
+import taskapp.repository.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Configuration
+public class DataInitializer {
+
+    @Bean
+    CommandLineRunner init(RoleRepository roleRepository,
+                           StatusRepository statusRepository,
+                           PriorityRepository priorityRepository,
+                           UserRepository userRepository,
+                           PasswordEncoder passwordEncoder) {
+        return args -> {
+            if (roleRepository.findByName("SUPER_ADMIN").isEmpty()) {
+                roleRepository.save(new Role("SUPER_ADMIN"));
+            }
+            if (roleRepository.findByName("ADMIN").isEmpty()) {
+                roleRepository.save(new Role("ADMIN"));
+            }
+            if (roleRepository.findByName("USER").isEmpty()) {
+                roleRepository.save(new Role("USER"));
+            }
+
+            if (statusRepository.findByName("ToDo").isEmpty()) {
+                statusRepository.save(new Status("ToDo"));
+            }
+            if (statusRepository.findByName("In_Progress").isEmpty()) {
+                statusRepository.save(new Status("In_Progress"));
+            }
+            if (statusRepository.findByName("Done").isEmpty()) {
+                statusRepository.save(new Status("Done"));
+            }
+
+            if (priorityRepository.findByName("Low").isEmpty()) {
+                priorityRepository.save(new Priority("Low"));
+            }
+            if (priorityRepository.findByName("Medium").isEmpty()) {
+                priorityRepository.save(new Priority("Medium"));
+            }
+            if (priorityRepository.findByName("High").isEmpty()) {
+                priorityRepository.save(new Priority("High"));
+            }
+
+            // create default super admin
+            if (userRepository.findByEmail("superadmin@example.com").isEmpty()) {
+                User sa = new User();
+                sa.setName("Super Admin");
+                sa.setEmail("superadmin@example.com");
+                sa.setPassword(passwordEncoder.encode("superadmin123"));
+                Set<Role> roles = new HashSet<>();
+                roleRepository.findByName("SUPER_ADMIN").ifPresent(roles::add);
+                roleRepository.findByName("ADMIN").ifPresent(roles::add);
+                sa.setRoles(roles);
+                userRepository.save(sa);
+            }
+        };
+    }
+}

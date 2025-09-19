@@ -1,0 +1,63 @@
+package taskapp.security;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.security.Key;
+import java.util.Date;
+
+@Component
+public class JwtUtil {
+
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;  // ⚠️ कम से कम 32 characters होना चाहिए (HS512 के लिए)
+
+    @Value("${app.jwt.expiration-ms}")
+    private long jwtExpirationInMs;
+
+    // ✅ Key generate करना (secret को byte[] में convert करके)
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
+
+    // ✅ Token generate
+    public String generateToken(String username, Long userId) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
+
+        return Jwts.builder()
+                .subject(username)
+                .claim("userId", userId)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey(), Jwts.SIG.HS512) // ✅ new API (0.12.x)
+                .compact();
+    }
+
+    // ✅ username extract करना
+    public String getUsernameFromJWT(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
+    // ✅ validate token
+    public boolean validateToken(String authToken) {
+        try {
+            Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(authToken);
+            return true;
+        } catch (ExpiredJwtException ex) {
+            throw ex; // expired case
+        } catch (JwtException | IllegalArgumentException ex) {
+            return false;
+        }
+    }
+}

@@ -1,0 +1,25 @@
+spring.application.name=TaskApp
+
+server.port =3030
+
+# -----------------------------
+# PostgreSQL Database Config
+# -----------------------------
+spring.datasource.url=jdbc:postgresql://localhost:5432/task_db
+spring.datasource.username= postgres
+spring.datasource.password root
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# -----------------------------
+# Hibernate / JPA Config
+# -----------------------------
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=update
+
+# JWT
+app.jwt.secret=${JWT_SECRET}
+app.jwt.expiration-ms=86400000
+
+# Logging
+logging.level.org.springframework.security=INFO
